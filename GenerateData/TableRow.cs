@@ -8,22 +8,30 @@ namespace GenerateData
 {
     public class TableRow
     {
-        public int PersonId { get; set; }
+        public int EmployeeId { get; set; }
         
-        public DateTime TimeComing { get; set; }
+        public DateTime WorkingTimeFrom { get; set; }
 
-        public DateTime TimeLeaving { get; set; }
+        public DateTime WorkingTimeTo { get; set; }
 
-        public TableRow(int personId, DateTime timeComing, DateTime timeLeaving)
+        public DateTime DinnerTimeFrom { get; set; }
+
+        public DateTime DinnerTimeTo { get; set; }
+
+        public TableRow(int personId, DateTime workingTimeFrom, DateTime workingTimeTo
+            , DateTime dinnerTimeFrom, DateTime dinnerTimeTo)
         {
-            PersonId = personId;
-            TimeComing = timeComing;
-            TimeLeaving = timeLeaving;
+            EmployeeId = personId;
+            WorkingTimeFrom = workingTimeFrom;
+            WorkingTimeTo = workingTimeTo;
+            DinnerTimeFrom = dinnerTimeFrom;
+            DinnerTimeTo = dinnerTimeTo;
         }
 
         public void Output()
         {
-            Console.WriteLine($"PersonId = {PersonId}; TimeComing = {TimeComing}; TimeLeaving = {TimeLeaving}");
+            Console.WriteLine($"PersonId = {EmployeeId}; WorkingTimeFrom = {WorkingTimeFrom}; " +
+                $"WorkingTimeTo = {WorkingTimeTo}; DinnerTimeFrom = {DinnerTimeFrom}; DinnerTimeTo = {DinnerTimeTo}" );
         }
     }
 }
