@@ -18,5 +18,6 @@ namespace GenerateData
 
         [JsonProperty("employees")]
         public Employee[] Employees { get; set; }
+
     }
 }
