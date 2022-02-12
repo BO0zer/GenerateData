@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Text;
+using System.Threading;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Newtonsoft.Json;
@@ -12,14 +14,15 @@ namespace GenerateData
     {
         static List<TableRow> rows = new List<TableRow>();
         static List<Row> rowsO = new List<Row>();
+        static int _randomInc = 1;
         class Row
         {
-            public int EmployeeId { get; set; }
+            public string EmployeeId { get; set; }
             public string WorkingTimeFrom { get; set; }
             public string WorkingTimeTo { get; set; }
             public string DinnerTimeFrom { get; set; }
             public string DinnerTimeTo { get; set; }
-            public Row(int employeeId, string dinnerTimeFrom, string dinnerTimeTo, string workingTimeFrom, string workingTimeTo)
+            public Row(string employeeId,  string workingTimeFrom, string workingTimeTo, string dinnerTimeFrom, string dinnerTimeTo)
             {
                 EmployeeId = employeeId;
                 DinnerTimeFrom = dinnerTimeFrom;
@@ -31,37 +34,72 @@ namespace GenerateData
         static void Main(string[] args)
         {
             GenerateData();
-            ////create configuration csv MS Excel format
-            //var cfg = new CsvConfiguration(CultureInfo.InvariantCulture);
-            //cfg.Delimiter = ";"; //ms excel format
 
-            ////write csv
-            //using (var sw = new StreamWriter($"test.csv"))
-            //using (var csv = new CsvWriter(sw, cfg))
-            //{
-            //    csv.WriteRecords(rowsO);
-            //}
+            //create configuration csv MS Excel format
+            var cfg = new CsvConfiguration(CultureInfo.InvariantCulture);
+            cfg.Delimiter = ";"; //ms excel format
+
+            string csvpath = @"C:\Users\Юриц\source\repos\GenerateData\GenerateData\bin\Debug\test2.csv";
+            StringBuilder csvContent = new StringBuilder();
+            csvContent.AppendLine("EmployeeId; WorkingTimeFrom; WorkingTimeTo; DinnerTimeFrom; DinnerTimeTo");
+            foreach (var row in rowsO)
+            {
+                csvContent.AppendLine($"{row.EmployeeId}; {row.WorkingTimeFrom}; {row.WorkingTimeTo}; {row.DinnerTimeFrom}; {row.DinnerTimeTo}");
+            }
+
+            File.AppendAllText(csvpath, csvContent.ToString());
+
             Console.ReadLine();
         }
 
         static void GenerateData()
         {
             Config config = GetConfig();
-
-            for (DateTime i = config.DateFrom; i < config.DateTo; i = i.AddDays(1))
+            DateTime i = config.DateFrom;
+            for (; i < config.DateTo; i = i.AddDays(1))
             {
-                foreach(var employee in config.Employees)
+                if (i.DayOfWeek == DayOfWeek.Sunday || i.DayOfWeek == DayOfWeek.Saturday)
+                    continue;
+                for(int j = 0; j < config.Employees.Length; j++)
                 {
-                    Random r = new Random();
-                    if(r.Next(0, 100) > employee.WorkingTime.AbsenseProbability)
+                    Employee employee = config.Employees[j];
+                    employee = CorrectFormat(employee, i);
+
+                    DateTime wExpectedStartTime = DateTime.MinValue;
+                    DateTime wExpectedFinishTime = DateTime.MinValue;
+                    DateTime dExpectedStartTime = DateTime.MinValue;
+                    DateTime dExpectedFinishTime = DateTime.MinValue;
+
+                    if (new Random(_randomInc * _randomInc * _randomInc * 10 - 100 * _randomInc++).Next(0, 100)  > employee.WorkingTime.AbsenseProbability)
                     {
-                        if(r.Next(0, 100) <= employee.WorkingTime.StartEvent.Earlier.Probability)
+                        wExpectedStartTime = Event.GetTime(employee.WorkingTime.StartEvent);
+                        wExpectedFinishTime = Event.GetTime(employee.WorkingTime.FinishEvent);
+
+                        if (new Random(_randomInc * _randomInc * _randomInc * 10 - 100 * _randomInc++).Next(0, 100) > employee.DinnerTime.AbsenseProbability)
                         {
-                            r.Next(0, (int)employee.WorkingTime.StartEvent.Earlier.MaxTimeDeviation.TimeOfDay.TotalMinutes);
+                            dExpectedStartTime = Event.GetTime(employee.DinnerTime.StartEvent);
+                            dExpectedFinishTime = Event.GetTime(employee.DinnerTime.FinishEvent);
                         }
+                    }
+
+                    if (!(wExpectedStartTime == DateTime.MinValue || wExpectedFinishTime == DateTime.MinValue))
+                    {
+                        string employeeId = employee.Id;
+                        string workingTimeFrom = wExpectedStartTime.ToString("O");
+                        string workingTimeTo = wExpectedFinishTime.ToString("O");
+                        string dinnerTimeFrom = "";
+                        string dinnerTimeTo = "";
+
+                        if (!(dExpectedStartTime == DateTime.MinValue || dExpectedFinishTime == DateTime.MinValue))
+                        {
+                            dinnerTimeFrom = dExpectedStartTime.ToString("O");
+                            dinnerTimeTo = dExpectedFinishTime.ToString("O");
+                        }
+                        rowsO.Add(new Row(employeeId, workingTimeFrom, workingTimeTo, dinnerTimeFrom, dinnerTimeTo));
                     }
                 }
             }
+
 
         }
         static Config GetConfig()
@@ -79,6 +117,23 @@ namespace GenerateData
                 throw new Exception("Конфига не существует");
             }
         }
+        public static Employee CorrectFormat(Employee employee, DateTime dateTime)
+        {
+            employee.DinnerTime.StartEvent.ExpectedTime = CorrectDateTime(employee.DinnerTime.StartEvent, dateTime);
+            employee.DinnerTime.FinishEvent.ExpectedTime = CorrectDateTime(employee.DinnerTime.FinishEvent, dateTime);
+            employee.WorkingTime.StartEvent.ExpectedTime = CorrectDateTime(employee.WorkingTime.StartEvent, dateTime);
+            employee.WorkingTime.FinishEvent.ExpectedTime = CorrectDateTime(employee.WorkingTime.FinishEvent, dateTime);
 
+            DateTime CorrectDateTime(Event someEvent, DateTime correctDateTime)
+            {
+                correctDateTime = correctDateTime.AddHours(someEvent.ExpectedTime.Hour);
+                correctDateTime = correctDateTime.AddMinutes(someEvent.ExpectedTime.Minute);
+                correctDateTime = correctDateTime.AddSeconds(someEvent.ExpectedTime.Second);
+
+                return correctDateTime;
+            }
+            return employee;
+        }
+        
     }
 }

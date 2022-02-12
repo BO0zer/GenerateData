@@ -17,7 +17,5 @@ namespace GenerateData
 
         [JsonProperty("finish_event")]
         public Event FinishEvent { get; set; }
-
-
     }
 }

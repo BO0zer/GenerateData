@@ -14,6 +14,6 @@ namespace GenerateData
         public int Probability { get; set; }
 
         [JsonProperty("max_time_deviation")]
-        public DateTime MaxTimeDeviation { get; set; }
+        public int MaxTimeDeviation { get; set; }
     }
 }
