@@ -12,9 +12,7 @@ namespace GenerateData
 {
     class Program
     {
-        static List<TableRow> rows = new List<TableRow>();
         static List<Row> rowsO = new List<Row>();
-        static int _randomInc = 1;
         class Row
         {
             public string EmployeeId { get; set; }
@@ -39,7 +37,7 @@ namespace GenerateData
             var cfg = new CsvConfiguration(CultureInfo.InvariantCulture);
             cfg.Delimiter = ";"; //ms excel format
 
-            string csvpath = @"C:\Users\Юриц\source\repos\GenerateData\GenerateData\bin\Debug\test2.csv";
+            string csvpath = @"test2.csv";
             StringBuilder csvContent = new StringBuilder();
             csvContent.AppendLine("EmployeeId; WorkingTimeFrom; WorkingTimeTo; DinnerTimeFrom; DinnerTimeTo");
             foreach (var row in rowsO)
@@ -54,6 +52,7 @@ namespace GenerateData
 
         static void GenerateData()
         {
+            Random r = new Random();
             Config config = GetConfig();
             DateTime i = config.DateFrom;
             for (; i < config.DateTo; i = i.AddDays(1))
@@ -70,15 +69,15 @@ namespace GenerateData
                     DateTime dExpectedStartTime = DateTime.MinValue;
                     DateTime dExpectedFinishTime = DateTime.MinValue;
 
-                    if (new Random(_randomInc * _randomInc * _randomInc * 10 - 100 * _randomInc++).Next(0, 100)  > employee.WorkingTime.AbsenseProbability)
+                    if (r.Next(0, 100)  > employee.WorkingTime.AbsenseProbability)
                     {
-                        wExpectedStartTime = Event.GetTime(employee.WorkingTime.StartEvent);
-                        wExpectedFinishTime = Event.GetTime(employee.WorkingTime.FinishEvent);
+                        wExpectedStartTime = Event.GetTime(employee.WorkingTime.StartEvent, r);
+                        wExpectedFinishTime = Event.GetTime(employee.WorkingTime.FinishEvent, r);
 
-                        if (new Random(_randomInc * _randomInc * _randomInc * 10 - 100 * _randomInc++).Next(0, 100) > employee.DinnerTime.AbsenseProbability)
+                        if (r.Next(0, 100) > employee.DinnerTime.AbsenseProbability)
                         {
-                            dExpectedStartTime = Event.GetTime(employee.DinnerTime.StartEvent);
-                            dExpectedFinishTime = Event.GetTime(employee.DinnerTime.FinishEvent);
+                            dExpectedStartTime = Event.GetTime(employee.DinnerTime.StartEvent, r);
+                            dExpectedFinishTime = Event.GetTime(employee.DinnerTime.FinishEvent, r);
                         }
                     }
 
