@@ -33,6 +33,9 @@ namespace GenerateData
         {
             GenerateData();
 
+            Console.WriteLine("Для запуска генерации данных нажмите клавишу...");
+            Console.ReadLine();
+
             //create configuration csv MS Excel format
             var cfg = new CsvConfiguration(CultureInfo.InvariantCulture);
             cfg.Delimiter = ";"; //ms excel format
@@ -45,8 +48,13 @@ namespace GenerateData
                 csvContent.AppendLine($"{row.EmployeeId}; {row.WorkingTimeFrom}; {row.WorkingTimeTo}; {row.DinnerTimeFrom}; {row.DinnerTimeTo}");
             }
 
+            //Удаление прошлого .csv файла
+            if (File.Exists(csvpath))
+                File.Delete(csvpath);
+
             File.AppendAllText(csvpath, csvContent.ToString());
 
+            Console.WriteLine("Генерация выполена успешно");
             Console.ReadLine();
         }
 
@@ -98,12 +106,11 @@ namespace GenerateData
                     }
                 }
             }
-
-
         }
         static Config GetConfig()
         {
-            string fileName = @"C:\Users\Юриц\source\repos\GenerateData\GenerateData\Конфиг.json";
+            string directory = AppDomain.CurrentDomain.BaseDirectory;
+            string fileName = directory + @"\Конфиг.json";
             if (File.Exists(fileName))
             {
                 Config config =
